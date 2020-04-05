@@ -1,5 +1,6 @@
 [![Build](https://travis-ci.com/skhatri/api-router-go.svg?branch=master)](https://travis-ci.com/github/skhatri/api-router-go)
 [![Code Coverage](https://img.shields.io/codecov/c/github/skhatri/api-router-go/master.svg)](https://codecov.io/github/skhatri/api-router-go?branch=master)
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3825/badge)](https://bestpractices.coreinfrastructure.org/projects/3825)
 
 
 ### Api-Router-Go
