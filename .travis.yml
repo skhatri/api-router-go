@@ -10,7 +10,8 @@ matrix:
   fast_finish: true
 
 script:
+  - go vet ./...
   - go test -v ./... -cover -coverprofile=coverage.txt -covermode=atomic
-
+  - go tool cover -html=coverage.txt -o coverage.html
 after_success:
   - bash <(curl -s https://codecov.io/bash)

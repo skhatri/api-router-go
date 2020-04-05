@@ -8,7 +8,7 @@ import (
 
 type WebRequest struct {
 	Headers     map[string]string `json:"headers"`
-	QueryParams map[string]string `json:"headers"`
+	QueryParams map[string]string `json:"query-params"`
 	Body        []byte            `json:"body"`
 	Uri         string            `json:"uri"`
 	QueryString string            `json:"query"`
@@ -55,7 +55,6 @@ func (router *httpRouterDelegate) getHandler(method string, uri string) HandlerF
 	}
 	return notFound
 }
-
 
 func notFound(request *WebRequest) *model.Container {
 	return model.ErrorResponse(model.MessageItem{

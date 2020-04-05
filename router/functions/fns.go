@@ -14,7 +14,11 @@ func StatusFunc(_ *router.WebRequest) *model.Container {
 }
 
 func EchoFunc(request *router.WebRequest) *model.Container {
-	return model.Response(request)
+	container := model.Response(request)
+	for k, v := range request.Headers {
+		container.AddHeader(k, v)
+	}
+	return container
 }
 
 func IndexFunc(_ *router.WebRequest) *model.Container {

@@ -1,5 +1,7 @@
 package model
 
+import "strings"
+
 type Container struct {
 	Errors   []MessageItem          `json:"errors,omitempty"`
 	Data     interface{}            `json:"data,omitempty"`
@@ -10,13 +12,16 @@ type Container struct {
 }
 
 func (c *Container) GetStatus() int {
+	if c.status == 0 {
+		return 200
+	}
 	return c.status
 }
 func (c *Container) AddHeader(key string, value string) *Container {
 	if c.headers == nil {
 		c.headers = make(map[string]string)
 	}
-	c.headers[key] = value
+	c.headers[strings.ToLower(key)] = value
 	return c
 }
 func (c *Container) GetHeaders() map[string]string {

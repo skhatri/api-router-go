@@ -3,3 +3,6 @@ api-router-go
 .DS_Store
 vendor
 TODO.md
+coverage.*
+.scannerwork
+go.sum
