@@ -1,7 +1,7 @@
 [![Build](https://travis-ci.com/skhatri/api-router-go.svg?branch=master)](https://travis-ci.com/github/skhatri/api-router-go)
 [![Code Coverage](https://img.shields.io/codecov/c/github/skhatri/api-router-go/master.svg)](https://codecov.io/github/skhatri/api-router-go?branch=master)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/3825/badge)](https://bestpractices.coreinfrastructure.org/projects/3825)
-[![Maintainability](https://api.codeclimate.com/v1/badges/587771b52b48dfc7c333/maintainability)](https://codeclimate.com/github/skhatri/microservices-starter-java/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/6238e287a522d53ea62c/maintainability)](https://codeclimate.com/github/skhatri/api-router-go/maintainability)
 
 ### Api-Router-Go
 
