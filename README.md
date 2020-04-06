@@ -12,7 +12,24 @@ Routing DSL to possibly help in building go API quickly for projects.
 go run router-example.go
 ```
 
-#### Usage
+#### Quickstart
+
+```go
+    import (
+        "fmt"
+        "github.com/skhatri/api-router-go/router"
+        "github.com/skhatri/api-router-go/router/functions"
+        "github.com/skhatri/api-router-go/starter"
+        "net/http"
+    )
+
+    func main() {
+      starter.StartApp(os.Args, 6200, func(cfg router.ApiConfigurer) {
+        configurer.Get("/echo", functions.EchoFunc)
+      })
+    }   
+```
+#### Start your own server 
 
 ```go
     import (
