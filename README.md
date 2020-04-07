@@ -33,7 +33,7 @@ go run router-example.go
 
 ```go
     import (
-        "fmt"
+        "log"
         "github.com/skhatri/api-router-go/router"
         "github.com/skhatri/api-router-go/router/functions"
         "net/http"
@@ -47,7 +47,46 @@ go run router-example.go
             configurer.Get("/echo", functions.EchoFunc)
         }).Build()
         var address = "0.0.0.0:6100"
-        fmt.Printf("Listening on %s\n", address)
+        log.Printf("Listening on %s\n", address)
         http.ListenAndServe(address, httpRouter)
     }
 ```
+
+#### Other Configurations
+A "router.json" can be provided either in the same folder as the binary or via ROUTE_SETTINGS environment variable to add default
+response headers and variables that are to be exposed via RouteSettings.
+
+```
+{
+  "response-headers": {
+    "x-served-by": "Api-Router-Go",
+    "access-control-allow-origin": "http://localhost:5000",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-headers": "X-Auth-Token, Content-Type, X-Client-Id",
+    "access-control-allow-credentials": "false",
+    "access-control-max-age": "7200"
+  },
+  "variables": {
+    "service_a_url": "http://localhost:7999"
+  },
+  "toggles": {
+    "read-mode": true,
+    "write-mode": false
+  },
+  "app": {
+    
+  }
+}
+```
+
+Variables and Toggles can be read like this
+
+```
+settings.GetSettings().Variable("service_a_url");
+
+settings.GetSettings().IsToggleOn("read-mode");
+settings.GetSettings().IsToggleOff("write-mode");
+settings.GetSettings().IsOn("read-mode");
+
+```
+
