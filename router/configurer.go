@@ -1,6 +1,11 @@
 package router
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/skhatri/api-router-go/router/settings"
+	"log"
+	"net/http"
+)
 
 type HttpRouterConfiguration struct {
 	delegate *httpRouterDelegate
@@ -12,12 +17,21 @@ type HttpRouterOptions struct {
 	LogFunction func(...interface{})
 }
 
-type HttpRouterBuilder struct {
-	options       *HttpRouterOptions
-	configuration *HttpRouterConfiguration
+type HttpRouteBuilder interface {
+	WithOptions(options HttpRouterOptions) HttpRouteBuilder
+	Configure(configurerFn func(httpDelegate ApiConfigurer)) HttpRouteBuilder
+	SettingsFrom(settingsFile *string) HttpRouteBuilder
+	Build() http.Handler
 }
 
-func (hrb *HttpRouterBuilder) WithOptions(options HttpRouterOptions) *HttpRouterBuilder {
+type _HttpRouterBuilder struct {
+	options         *HttpRouterOptions
+	configuration   *HttpRouterConfiguration
+	configurationFn func(configurer ApiConfigurer)
+	settings        *string
+}
+
+func (hrb *_HttpRouterBuilder) WithOptions(options HttpRouterOptions) HttpRouteBuilder {
 	var defaultOptions = options
 	if defaultOptions.LogFunction == nil {
 		defaultOptions.LogFunction = DefaultLogger
@@ -26,13 +40,17 @@ func (hrb *HttpRouterBuilder) WithOptions(options HttpRouterOptions) *HttpRouter
 	return hrb
 }
 
-func (hrb *HttpRouterBuilder) Configure(configurerFn func(httpDelegate ApiConfigurer)) *HttpRouterBuilder {
-	var apiConfigurer ApiConfigurer = hrb.configuration.delegate
-	configurerFn(apiConfigurer)
+func (hrb *_HttpRouterBuilder) Configure(configurerFn func(httpDelegate ApiConfigurer)) HttpRouteBuilder {
+	hrb.configurationFn = configurerFn
 	return hrb
 }
 
-func (hrb *HttpRouterBuilder) Build() *httpRouter {
+func (hrb *_HttpRouterBuilder) SettingsFrom(settingsFile *string) HttpRouteBuilder {
+	hrb.settings = settingsFile
+	return hrb
+}
+
+func (hrb *_HttpRouterBuilder) Build() http.Handler {
 	if hrb.options == nil {
 		var defaultOptions = HttpRouterOptions{
 			LogRequest:  true,
@@ -40,14 +58,29 @@ func (hrb *HttpRouterBuilder) Build() *httpRouter {
 		}
 		hrb.options = &defaultOptions
 	}
+
+	hrb.processExternalConfiguration()
+
+	var apiConfigurer ApiConfigurer = hrb.configuration.delegate
+
+	if hrb.configurationFn != nil {
+		hrb.configurationFn(apiConfigurer)
+	}
 	return &httpRouter{
 		options: hrb.options,
 		router:  hrb.configuration,
 	}
 }
 
-func NewHttpRouterBuilder() *HttpRouterBuilder {
-	return &HttpRouterBuilder{
+func (hrb *_HttpRouterBuilder) processExternalConfiguration() {
+	err := settings.ApplySettings(hrb.settings)
+	if err != nil {
+		panic(fmt.Sprintf("error processing route settings %s", err.Error()))
+	}
+}
+
+func NewHttpRouterBuilder() HttpRouteBuilder {
+	return &_HttpRouterBuilder{
 		configuration: defaultRouterConfiguration(),
 	}
 }
@@ -60,5 +93,5 @@ func defaultRouterConfiguration() *HttpRouterConfiguration {
 }
 
 var DefaultLogger = func(s ...interface{}) {
-	fmt.Println(s)
+	log.Println(s)
 }

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/skhatri/api-router-go/router"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -49,15 +50,15 @@ func StartApp(appArgs []string, defaultPort int, configurationHook func(router.A
 			WithOptions(router.HttpRouterOptions{
 				LogRequest: true,
 				LogFunction: func(values ...interface{}) {
-					fmt.Println(values)
+					log.Println(values)
 				},
 			}).Configure(func(configurer router.ApiConfigurer) {
 			configurationHook(configurer)
 		}).Build()
-		fmt.Printf("Listening on %s\n", address)
+		log.Printf("Listening on %s\n", address)
 		http.ListenAndServe(address, r)
 	default:
-		fmt.Printf("command %s is not supported\n", command)
+		log.Printf("command %s is not supported\n", command)
 	}
 
 }

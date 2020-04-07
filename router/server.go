@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"github.com/skhatri/api-router-go/router/model"
+	"github.com/skhatri/api-router-go/router/settings"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -58,10 +59,13 @@ func render(w http.ResponseWriter, container *model.Container) {
 	if status == 0 {
 		status = 200
 	}
-	w.WriteHeader(status)
+	for k, v := range settings.GetSettings().ResponseHeaders() {
+		w.Header().Add(k, v)
+	}
 	for k, v := range container.GetHeaders() {
 		w.Header().Add(k, v)
 	}
+	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(container)
 }
 

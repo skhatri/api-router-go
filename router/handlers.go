@@ -25,26 +25,60 @@ func (web *WebRequest) GetQueryParam(name string) string {
 type HandlerFunc func(request *WebRequest) *model.Container
 
 type ApiConfigurer interface {
-	Get(string, HandlerFunc)
-	Post(string, HandlerFunc)
-	Method(string, string, HandlerFunc)
+	Get(string, HandlerFunc) ApiConfigurer
+	Post(string, HandlerFunc) ApiConfigurer
+	Method(string, string, HandlerFunc) ApiConfigurer
+	GetIf(cond bool) *ConditionalMethodBuilder
+	PostIf(cond bool) *ConditionalMethodBuilder
 }
 
 type httpRouterDelegate struct {
 	mapping map[string]HandlerFunc
 }
 
-func (router *httpRouterDelegate) Get(uri string, handlerFn HandlerFunc) {
+func (router *httpRouterDelegate) Get(uri string, handlerFn HandlerFunc) ApiConfigurer {
 	router.Method("GET", uri, handlerFn)
+	return router
 }
 
-func (router *httpRouterDelegate) Post(uri string, handlerFn HandlerFunc) {
+type ConditionalMethodBuilder struct {
+	Method string
+	Check    bool
+	Delegate *httpRouterDelegate
+}
+
+func (methodBuilder *ConditionalMethodBuilder) Register(uri string, handlerFunc HandlerFunc) ApiConfigurer {
+	if methodBuilder.Check {
+		methodBuilder.Delegate.Method(methodBuilder.Method, uri, handlerFunc)
+	}
+	return methodBuilder.Delegate
+}
+
+func (router *httpRouterDelegate) GetIf(cond bool) *ConditionalMethodBuilder {
+	return &ConditionalMethodBuilder{
+		Method: "GET",
+		Check:    cond,
+		Delegate: router,
+	}
+}
+
+func (router *httpRouterDelegate) PostIf(cond bool) *ConditionalMethodBuilder {
+	return &ConditionalMethodBuilder{
+		Method: "POST",
+		Check:    cond,
+		Delegate: router,
+	}
+}
+
+func (router *httpRouterDelegate) Post(uri string, handlerFn HandlerFunc) ApiConfigurer {
 	router.Method("POST", uri, handlerFn)
+	return router
 }
 
-func (router *httpRouterDelegate) Method(method string, uri string, handlerFunc HandlerFunc) {
+func (router *httpRouterDelegate) Method(method string, uri string, handlerFunc HandlerFunc) ApiConfigurer {
 	methodKey := strings.ToLower(fmt.Sprintf("%s::%s", method, uri))
 	router.mapping[methodKey] = handlerFunc
+	return router
 }
 
 func (router *httpRouterDelegate) getHandler(method string, uri string) HandlerFunc {
