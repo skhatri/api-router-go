@@ -54,6 +54,17 @@ func (methodBuilder *ConditionalMethodBuilder) Register(uri string, handlerFunc 
 	return methodBuilder.Delegate
 }
 
+func (methodBuilder *ConditionalMethodBuilder) Add(uri string, handlerFunc HandlerFunc) *ConditionalMethodBuilder {
+	if methodBuilder.Check {
+		methodBuilder.Delegate.Method(methodBuilder.Method, uri, handlerFunc)
+	}
+	return methodBuilder
+}
+
+func (methodBuilder *ConditionalMethodBuilder) Done() ApiConfigurer {
+	return methodBuilder.Delegate
+}
+
 func (router *httpRouterDelegate) GetIf(cond bool) *ConditionalMethodBuilder {
 	return &ConditionalMethodBuilder{
 		Method: "GET",
