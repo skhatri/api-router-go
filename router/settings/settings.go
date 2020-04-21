@@ -5,12 +5,14 @@ type RouteSettings interface {
 	IsToggleOn(name string) bool
 	IsToggleOff(name string) bool
 	ResponseHeaders() map[string]string
+	StaticMappings() map[string]string
 }
 
 type _RouteSettings struct {
 	DefaultResponseHeaders map[string]string `json:"response-headers"`
 	Toggles                map[string]bool   `json:"toggles"`
 	Variables              map[string]string `json:"variables"`
+	Static                 map[string]string `json:"static"`
 }
 
 func (rs *_RouteSettings) Variable(name string) *string {
@@ -40,6 +42,9 @@ func (rs *_RouteSettings) toggleState(name string) bool {
 func (rs *_RouteSettings) ResponseHeaders() map[string]string {
 	return rs.DefaultResponseHeaders
 }
+func (rs *_RouteSettings) StaticMappings() map[string]string {
+	return rs.Static
+}
 
 type EmptySettings struct {
 }
@@ -54,5 +59,8 @@ func (empty *EmptySettings) IsToggleOff(string) bool {
 	return true
 }
 func (empty *EmptySettings) ResponseHeaders() map[string]string {
+	return nil
+}
+func (empty *EmptySettings) StaticMappings() map[string]string {
 	return nil
 }

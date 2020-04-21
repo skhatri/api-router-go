@@ -21,7 +21,7 @@ type HttpRouteBuilder interface {
 	WithOptions(options HttpRouterOptions) HttpRouteBuilder
 	Configure(configurerFn func(httpDelegate ApiConfigurer)) HttpRouteBuilder
 	SettingsFrom(settingsFile *string) HttpRouteBuilder
-	Build() http.Handler
+	Build() *http.ServeMux
 }
 
 type _HttpRouterBuilder struct {
@@ -50,7 +50,7 @@ func (hrb *_HttpRouterBuilder) SettingsFrom(settingsFile *string) HttpRouteBuild
 	return hrb
 }
 
-func (hrb *_HttpRouterBuilder) Build() http.Handler {
+func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
 	if hrb.options == nil {
 		var defaultOptions = HttpRouterOptions{
 			LogRequest:  true,
@@ -66,9 +66,22 @@ func (hrb *_HttpRouterBuilder) Build() http.Handler {
 	if hrb.configurationFn != nil {
 		hrb.configurationFn(apiConfigurer)
 	}
-	return &httpRouter{
+	serveMux := http.NewServeMux()
+	addStaticMapping(serveMux, hrb.configuration.delegate.staticMapping)
+	addStaticMapping(serveMux, settings.GetSettings().StaticMappings())
+	router := &httpRouter{
 		options: hrb.options,
 		router:  hrb.configuration,
+	}
+	serveMux.Handle("/", router)
+	return serveMux
+}
+
+func addStaticMapping(serveMux *http.ServeMux, mapping map[string]string) {
+	for pathUri, folder := range mapping {
+		fs := http.FileServer(http.Dir(fmt.Sprintf("./%s", folder)))
+		prefix := fmt.Sprintf("/%s/", pathUri)
+		serveMux.Handle(prefix, http.StripPrefix(prefix, fs))
 	}
 }
 
@@ -88,6 +101,7 @@ func NewHttpRouterBuilder() HttpRouteBuilder {
 func defaultRouterConfiguration() *HttpRouterConfiguration {
 	routerRef := &httpRouterDelegate{
 		mapping: make(map[string]HandlerFunc),
+		staticMapping: make(map[string]string),
 	}
 	return &HttpRouterConfiguration{delegate: routerRef}
 }

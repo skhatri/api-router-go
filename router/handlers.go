@@ -30,14 +30,21 @@ type ApiConfigurer interface {
 	Method(string, string, HandlerFunc) ApiConfigurer
 	GetIf(cond bool) *ConditionalMethodBuilder
 	PostIf(cond bool) *ConditionalMethodBuilder
+	Static(string, string) ApiConfigurer
 }
 
 type httpRouterDelegate struct {
 	mapping map[string]HandlerFunc
+	staticMapping map[string]string
 }
 
 func (router *httpRouterDelegate) Get(uri string, handlerFn HandlerFunc) ApiConfigurer {
 	router.Method("GET", uri, handlerFn)
+	return router
+}
+
+func (router *httpRouterDelegate) Static(path string, folder string) ApiConfigurer {
+	router.staticMapping[path] = folder
 	return router
 }
 
