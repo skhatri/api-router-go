@@ -52,6 +52,36 @@ go run router-example.go
     }
 ```
 
+#### Serving Static Paths
+Static paths can be provided by ApiConfigurer DSL like this 
+```
+    configurer.
+        Static("test", "test").
+```
+It can also be provided in router.json. Here is the relevant configuration in router.json
+
+```
+  "static": {
+    "source": ""
+  },
+```
+The above configuration will create static file server to serve all content in the current directory under the path /source
+
+#### Path Variables Support
+Path variables can be specified with a prefix ```:``` in the configured uri.
+```
+    configurer.
+        Get("/greetings/:id", functions.EchoFunc)
+``` 
+
+They can be extracted from injected WebRequest using the following: 
+```
+    func myHandler(web *router.WebRequest) *router.Container {
+        id := web.GetPathParam("id")
+        ...
+    }
+```
+
 #### Other Configurations
 A "router.json" can be provided either in the same folder as the binary or via ROUTE_SETTINGS environment variable to add default
 response headers and variables that are to be exposed via RouteSettings.

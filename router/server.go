@@ -17,7 +17,7 @@ type httpRouter struct {
 //ServeHTTP http interface method
 func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	requestUri := r.URL.Path
-	handlerFunc := hs.router.delegate.getHandler(r.Method, requestUri)
+	handlerFunc, pathParams := hs.router.delegate.getHandler(r.Method, requestUri)
 	if handlerFunc == nil {
 		notFound(&WebRequest{Uri: r.RequestURI})
 		return
@@ -50,6 +50,7 @@ func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Headers:     headers,
 		QueryParams: params,
 		QueryString: r.URL.RawQuery,
+		PathParams: pathParams,
 	}
 	render(w, handlerFunc(webRequest))
 }

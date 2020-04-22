@@ -51,6 +51,7 @@ func (hrb *_HttpRouterBuilder) SettingsFrom(settingsFile *string) HttpRouteBuild
 }
 
 func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
+
 	if hrb.options == nil {
 		var defaultOptions = HttpRouterOptions{
 			LogRequest:  true,
@@ -69,13 +70,12 @@ func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
 	serveMux := http.NewServeMux()
 	addStaticMapping(serveMux, hrb.configuration.delegate.staticMapping)
 	addStaticMapping(serveMux, settings.GetSettings().StaticMappings())
-	router := &httpRouter{
-		options: hrb.options,
-		router:  hrb.configuration,
-	}
-	serveMux.Handle("/", router)
+
+	serveMux.Handle("/", hrb.newRouter())
 	return serveMux
 }
+
+
 
 func addStaticMapping(serveMux *http.ServeMux, mapping map[string]string) {
 	for pathUri, folder := range mapping {
@@ -92,6 +92,13 @@ func (hrb *_HttpRouterBuilder) processExternalConfiguration() {
 	}
 }
 
+func (hrb *_HttpRouterBuilder) newRouter() *httpRouter {
+	return &httpRouter{
+		options: hrb.options,
+		router: hrb.configuration ,
+	}
+}
+
 func NewHttpRouterBuilder() HttpRouteBuilder {
 	return &_HttpRouterBuilder{
 		configuration: defaultRouterConfiguration(),
@@ -100,8 +107,9 @@ func NewHttpRouterBuilder() HttpRouteBuilder {
 
 func defaultRouterConfiguration() *HttpRouterConfiguration {
 	routerRef := &httpRouterDelegate{
-		mapping: make(map[string]HandlerFunc),
-		staticMapping: make(map[string]string),
+		dynamicStore: pathMatchingUriStore(),
+		staticStore: simpleUriStore(),
+		staticMapping:  make(map[string]string),
 	}
 	return &HttpRouterConfiguration{delegate: routerRef}
 }

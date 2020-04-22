@@ -27,7 +27,7 @@ func main() {
 					Add("/status3", functions.StatusFunc).
 					Add("/status4", functions.StatusFunc).
 				Done().
-
+				Get("/greetings/:id", functions.EchoFunc).
 				Static("test", "test")
 
 		}).Build()

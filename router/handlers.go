@@ -9,6 +9,7 @@ import (
 type WebRequest struct {
 	Headers     map[string]string `json:"headers"`
 	QueryParams map[string]string `json:"query-params"`
+	PathParams map[string]string `json:"path-params"`
 	Body        []byte            `json:"body"`
 	Uri         string            `json:"uri"`
 	QueryString string            `json:"query"`
@@ -20,6 +21,10 @@ func (web *WebRequest) GetHeader(name string) string {
 
 func (web *WebRequest) GetQueryParam(name string) string {
 	return web.QueryParams[name]
+}
+
+func (web *WebRequest) GetPathParam(name string) string {
+	return web.PathParams[name]
 }
 
 type HandlerFunc func(request *WebRequest) *model.Container
@@ -34,8 +39,9 @@ type ApiConfigurer interface {
 }
 
 type httpRouterDelegate struct {
-	mapping map[string]HandlerFunc
 	staticMapping map[string]string
+	staticStore   HandlerRegistry
+	dynamicStore  HandlerRegistry
 }
 
 func (router *httpRouterDelegate) Get(uri string, handlerFn HandlerFunc) ApiConfigurer {
@@ -49,7 +55,7 @@ func (router *httpRouterDelegate) Static(path string, folder string) ApiConfigur
 }
 
 type ConditionalMethodBuilder struct {
-	Method string
+	Method   string
 	Check    bool
 	Delegate *httpRouterDelegate
 }
@@ -74,7 +80,7 @@ func (methodBuilder *ConditionalMethodBuilder) Done() ApiConfigurer {
 
 func (router *httpRouterDelegate) GetIf(cond bool) *ConditionalMethodBuilder {
 	return &ConditionalMethodBuilder{
-		Method: "GET",
+		Method:   "GET",
 		Check:    cond,
 		Delegate: router,
 	}
@@ -82,7 +88,7 @@ func (router *httpRouterDelegate) GetIf(cond bool) *ConditionalMethodBuilder {
 
 func (router *httpRouterDelegate) PostIf(cond bool) *ConditionalMethodBuilder {
 	return &ConditionalMethodBuilder{
-		Method: "POST",
+		Method:   "POST",
 		Check:    cond,
 		Delegate: router,
 	}
@@ -94,18 +100,24 @@ func (router *httpRouterDelegate) Post(uri string, handlerFn HandlerFunc) ApiCon
 }
 
 func (router *httpRouterDelegate) Method(method string, uri string, handlerFunc HandlerFunc) ApiConfigurer {
-	methodKey := strings.ToLower(fmt.Sprintf("%s::%s", method, uri))
-	router.mapping[methodKey] = handlerFunc
+	if strings.Contains(uri, ":") {
+		router.dynamicStore.Add(method, uri, handlerFunc)
+	} else {
+		router.staticStore.Add(method, uri, handlerFunc)
+	}
 	return router
 }
 
-func (router *httpRouterDelegate) getHandler(method string, uri string) HandlerFunc {
-	methodKey := strings.ToLower(fmt.Sprintf("%s::%s", method, uri))
-	handlerFunc, ok := router.mapping[methodKey]
-	if ok {
-		return handlerFunc
+func (router *httpRouterDelegate) getHandler(method string, uri string) (HandlerFunc, map[string]string) {
+	handlerFunc, _ := router.staticStore.Lookup(method, uri)
+	if handlerFunc != nil {
+		return handlerFunc, nil
 	}
-	return notFound
+	handlerFunc, params := router.dynamicStore.Lookup(method, uri)
+	if handlerFunc != nil {
+		return handlerFunc, params
+	}
+	return notFound, nil
 }
 
 func notFound(request *WebRequest) *model.Container {
