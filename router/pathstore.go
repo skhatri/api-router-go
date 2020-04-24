@@ -31,12 +31,12 @@ func pathMatchingUriStore() HandlerRegistry {
 	}
 }
 
-var variableName = regexp.MustCompile("(:[a-zA-Z0-9_]+)")
+var variableName = regexp.MustCompile("(:[a-zA-Z0-9_\\-]+)")
 
 func pathTemplateToUrlMatcher(registeredPath string) (*regexp.Regexp, string) {
 	newPath := registeredPath
 	for _, m := range variableName.FindAllStringSubmatch(registeredPath, -1) {
-		newPath = strings.Replace(newPath, m[0], fmt.Sprintf("(?P<%s>[a-zA-Z0-9_]+)", m[0][1:]), -1)
+		newPath = strings.Replace(newPath, m[0], fmt.Sprintf("(?P<%s>[a-zA-Z0-9_\\-]+)", m[0][1:]), -1)
 	}
 	compiled := regexp.MustCompile(newPath)
 	return compiled, newPath
