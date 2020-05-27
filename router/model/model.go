@@ -28,7 +28,7 @@ func (c *Container) GetHeaders() map[string]string {
 	return c.headers
 }
 func (c *Container) AsJson() *Container {
-	c.AddHeader("Content-Type", "application/json")
+	c.AddHeader("Content-Type", "application/json;charset=utf-8")
 	return c
 }
 
