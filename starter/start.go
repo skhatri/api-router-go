@@ -30,8 +30,13 @@ func parseArguments(args []string, defaultPort int) string {
 	return fmt.Sprintf("%s:%d", address, port)
 }
 
-//Application Quickstart
-func StartApp(appArgs []string, defaultPort int, configurationHook func(router.ApiConfigurer)) {
+//StartApp quick starter
+func StartApp(appArgs []string, defaultPort int, configurationHook func(configurer router.ApiConfigurer)){
+	StartAppWithOptions(appArgs, defaultPort, configurationHook, nil)
+}
+
+//StartAppWithOptions quick starter that takes a logging function
+func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook func(router.ApiConfigurer), logFn func(...interface{})) {
 	var args []string
 
 	if len(appArgs) < 2 {
@@ -46,12 +51,18 @@ func StartApp(appArgs []string, defaultPort int, configurationHook func(router.A
 	switch command {
 	case "serve":
 		address := parseArguments(args, defaultPort)
+		var logFunc func(...interface{})
+		if logFn == nil {
+			logFunc = func(values ...interface{}) {
+				log.Println(values)
+			}
+		} else {
+			logFunc = logFn
+		}
 		r := router.NewHttpRouterBuilder().
 			WithOptions(router.HttpRouterOptions{
-				LogRequest: true,
-				LogFunction: func(values ...interface{}) {
-					log.Println(values)
-				},
+				LogRequest:  true,
+				LogFunction: logFunc,
 			}).Configure(func(configurer router.ApiConfigurer) {
 			configurationHook(configurer)
 		}).Build()
