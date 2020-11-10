@@ -12,7 +12,7 @@ func main() {
 
 	mux := router.NewHttpRouterBuilder().
 		WithOptions(router.HttpRouterOptions{
-			LogRequest: false,
+			LogRequest: true,
 		}).
 		Configure(func(configurer router.ApiConfigurer) {
 			_settings := settings.GetSettings()

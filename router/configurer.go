@@ -14,7 +14,7 @@ type HttpRouterConfiguration struct {
 //HttpRouterOptions Router Options
 type HttpRouterOptions struct {
 	LogRequest  bool
-	LogFunction func(...interface{})
+	LogFunction func(RequestSummary)
 }
 
 type HttpRouteBuilder interface {
@@ -114,6 +114,6 @@ func defaultRouterConfiguration() *HttpRouterConfiguration {
 	return &HttpRouterConfiguration{delegate: routerRef}
 }
 
-var DefaultLogger = func(s ...interface{}) {
-	log.Println(s)
+var DefaultLogger = func(s RequestSummary) {
+	log.Println(s.Status, s.Method, s.Uri, s.TimeTaken, s.Unit)
 }
