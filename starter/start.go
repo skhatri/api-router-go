@@ -36,7 +36,7 @@ func StartApp(appArgs []string, defaultPort int, configurationHook func(configur
 }
 
 //StartAppWithOptions quick starter that takes a logging function
-func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook func(router.ApiConfigurer), logFn func(...interface{})) {
+func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook func(router.ApiConfigurer), logFn func(summary router.RequestSummary)) {
 	var args []string
 
 	if len(appArgs) < 2 {
@@ -51,9 +51,9 @@ func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook fu
 	switch command {
 	case "serve":
 		address := parseArguments(args, defaultPort)
-		var logFunc func(...interface{})
+		var logFunc func(summary router.RequestSummary)
 		if logFn == nil {
-			logFunc = func(values ...interface{}) {
+			logFunc = func(values router.RequestSummary) {
 				log.Println(values)
 			}
 		} else {
