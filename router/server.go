@@ -62,7 +62,7 @@ func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if hs.options.LogRequest {
 		timeTaken := time.Since(start).Milliseconds()
 		hs.options.LogFunction(RequestSummary{
-			Method: r.Method,
+			Method:    r.Method,
 			Uri:       r.RequestURI,
 			TimeTaken: int(timeTaken),
 			Unit:      "ms",
@@ -83,7 +83,14 @@ func render(w http.ResponseWriter, container *model.Container) int {
 		w.Header().Add(k, v)
 	}
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(container)
+	encoder := json.NewEncoder(w)
+	if container.IsDecorated() {
+		encoder.Encode(container)
+	} else if status <= 400 {
+		encoder.Encode(container.Data)
+	} else {
+		encoder.Encode(container.Errors)
+	}
 	return status
 }
 

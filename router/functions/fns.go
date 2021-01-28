@@ -10,7 +10,7 @@ var statusResult = map[string]string{
 }
 
 func StatusFunc(_ *router.WebRequest) *model.Container {
-	return model.Response(statusResult)
+	return model.WithDataOnly(statusResult)
 }
 
 func EchoFunc(request *router.WebRequest) *model.Container {

@@ -8,6 +8,7 @@
 Routing DSL to possibly help in building go API quickly for projects.
 
 #### Running Example App
+
 ```
 go run router-example.go
 ```
@@ -16,48 +17,52 @@ go run router-example.go
 
 ```go
     import (
-        "fmt"
-        "github.com/skhatri/api-router-go/router"
-        "github.com/skhatri/api-router-go/router/functions"
-        "github.com/skhatri/api-router-go/starter"
-        "net/http"
-    )
+"fmt"
+"github.com/skhatri/api-router-go/router"
+"github.com/skhatri/api-router-go/router/functions"
+"github.com/skhatri/api-router-go/starter"
+"net/http"
+)
 
-    func main() {
-      starter.StartApp(os.Args, 6200, func(cfg router.ApiConfigurer) {
-        configurer.Get("/echo", functions.EchoFunc)
-      })
-    }   
+func main() {
+starter.StartApp(os.Args, 6200, func (cfg router.ApiConfigurer) {
+configurer.Get("/echo", functions.EchoFunc)
+})
+}   
 ```
-#### Start your own server 
+
+#### Start your own server
 
 ```go
     import (
-        "log"
-        "github.com/skhatri/api-router-go/router"
-        "github.com/skhatri/api-router-go/router/functions"
-        "net/http"
-    )
-    
-    func main() {
-        httpRouter := router.NewHttpRouterBuilder().
-            WithOptions(router.HttpRouterOptions{
-                LogRequest: false,
-            }).Configure(func(configurer router.ApiConfigurer) {
-            configurer.Get("/echo", functions.EchoFunc)
-        }).Build()
-        var address = "0.0.0.0:6100"
-        log.Printf("Listening on %s\n", address)
-        http.ListenAndServe(address, httpRouter)
-    }
+"log"
+"github.com/skhatri/api-router-go/router"
+"github.com/skhatri/api-router-go/router/functions"
+"net/http"
+)
+
+func main() {
+httpRouter := router.NewHttpRouterBuilder().
+WithOptions(router.HttpRouterOptions{
+LogRequest: false,
+}).Configure(func (configurer router.ApiConfigurer) {
+configurer.Get("/echo", functions.EchoFunc)
+}).Build()
+var address = "0.0.0.0:6100"
+log.Printf("Listening on %s\n", address)
+http.ListenAndServe(address, httpRouter)
+}
 ```
 
 #### Serving Static Paths
-Static paths can be provided by ApiConfigurer DSL like this 
+
+Static paths can be provided by ApiConfigurer DSL like this
+
 ```
     configurer.
         Static("test", "test").
 ```
+
 It can also be provided in router.json. Here is the relevant configuration in router.json
 
 ```
@@ -65,16 +70,21 @@ It can also be provided in router.json. Here is the relevant configuration in ro
     "source": ""
   },
 ```
-The above configuration will create static file server to serve all content in the current directory under the path /source
+
+The above configuration will create static file server to serve all content in the current directory under the path
+/source
 
 #### Path Variables Support
+
 Path variables can be specified with a prefix ```:``` in the configured uri.
+
 ```
     configurer.
         Get("/greetings/:id", functions.EchoFunc)
 ``` 
 
-They can be extracted from injected WebRequest using the following: 
+They can be extracted from injected WebRequest using the following:
+
 ```
     func myHandler(web *router.WebRequest) *router.Container {
         id := web.GetPathParam("id")
@@ -83,8 +93,9 @@ They can be extracted from injected WebRequest using the following:
 ```
 
 #### Other Configurations
-A "router.json" can be provided either in the same folder as the binary or via ROUTE_SETTINGS environment variable to add default
-response headers and variables that are to be exposed via RouteSettings.
+
+A "router.json" can be provided either in the same folder as the binary or via ROUTE_SETTINGS environment variable to
+add default response headers and variables that are to be exposed via RouteSettings.
 
 ```
 {
@@ -120,3 +131,32 @@ settings.GetSettings().IsOn("read-mode");
 
 ```
 
+#### Returning Responses
+
+Container type can be returned from each function which decorates with nodes like errors, warning, metadata and data.
+
+```
+func StatusFunc(_ *router.WebRequest) *model.Container {
+	return model.Response(statusResult)
+}
+```
+
+The above snippet will render
+
+```
+{"data":{"status": "OK"}}
+```
+
+If decoration is not preferred, you can create container using ```WithDataOnly```
+
+```
+func StatusFunc(_ *router.WebRequest) *model.Container {
+	return model.WithDataOnly(statusResult)
+}
+```
+
+The above snippet will render
+
+```
+{"status": "OK"}
+```
