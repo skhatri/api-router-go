@@ -33,6 +33,7 @@ func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	var requestData []byte = nil
 	if r.Body != nil {
+		defer r.Body.Close()
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			render(w, badRequest())
@@ -76,13 +77,13 @@ func render(w http.ResponseWriter, container *model.Container) int {
 	if status == 0 {
 		status = 200
 	}
+	w.WriteHeader(status)
 	for k, v := range settings.GetSettings().ResponseHeaders() {
 		w.Header().Add(k, v)
 	}
 	for k, v := range container.GetHeaders() {
 		w.Header().Add(k, v)
 	}
-	w.WriteHeader(status)
 	encoder := json.NewEncoder(w)
 	if container.IsDecorated() {
 		encoder.Encode(container)
