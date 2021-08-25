@@ -19,6 +19,7 @@ func main() {
 			configurer.
 
 				Get("/echo", functions.EchoFunc).
+                                Post("/echo", functions.EchoFunc).
 				GetIf(true).Register("/status", functions.StatusFunc).
 				GetIf(false).Register("/status2", functions.StatusFunc).
 

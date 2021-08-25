@@ -26,7 +26,10 @@ type RequestSummary struct {
 func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	requestUri := r.URL.Path
-	handlerFunc, pathParams := hs.router.delegate.getHandler(r.Method, requestUri)
+	handlerFunc, found, pathParams := hs.router.delegate.getHandler(r.Method, requestUri)
+	if found && r.Method == "OPTIONS" {
+		handlerFunc = ok
+	}
 	if handlerFunc == nil {
 		notFound(&WebRequest{Uri: r.RequestURI})
 		return
@@ -59,6 +62,7 @@ func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		QueryString: r.URL.RawQuery,
 		PathParams:  pathParams,
 	}
+
 	status := render(w, handlerFunc(webRequest))
 	if hs.options.LogRequest {
 		timeTaken := time.Since(start).Milliseconds()
@@ -77,13 +81,14 @@ func render(w http.ResponseWriter, container *model.Container) int {
 	if status == 0 {
 		status = 200
 	}
-	w.WriteHeader(status)
 	for k, v := range settings.GetSettings().ResponseHeaders() {
 		w.Header().Add(k, v)
 	}
 	for k, v := range container.GetHeaders() {
 		w.Header().Add(k, v)
 	}
+	w.WriteHeader(status)
+
 	encoder := json.NewEncoder(w)
 	if container.IsDecorated() {
 		encoder.Encode(container)

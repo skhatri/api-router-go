@@ -9,7 +9,7 @@ import (
 type WebRequest struct {
 	Headers     map[string]string `json:"headers"`
 	QueryParams map[string]string `json:"query-params"`
-	PathParams map[string]string `json:"path-params"`
+	PathParams  map[string]string `json:"path-params"`
 	Body        []byte            `json:"body"`
 	Uri         string            `json:"uri"`
 	QueryString string            `json:"query"`
@@ -102,22 +102,28 @@ func (router *httpRouterDelegate) Post(uri string, handlerFn HandlerFunc) ApiCon
 func (router *httpRouterDelegate) Method(method string, uri string, handlerFunc HandlerFunc) ApiConfigurer {
 	if strings.Contains(uri, ":") {
 		router.dynamicStore.Add(method, uri, handlerFunc)
+		router.dynamicStore.Add("OPTIONS", uri, handlerFunc)
 	} else {
 		router.staticStore.Add(method, uri, handlerFunc)
+		router.staticStore.Add("OPTIONS", uri, handlerFunc)
 	}
 	return router
 }
 
-func (router *httpRouterDelegate) getHandler(method string, uri string) (HandlerFunc, map[string]string) {
+func (router *httpRouterDelegate) getHandler(method string, uri string) (HandlerFunc, bool, map[string]string) {
 	handlerFunc, _ := router.staticStore.Lookup(method, uri)
 	if handlerFunc != nil {
-		return handlerFunc, nil
+		return handlerFunc, true, nil
 	}
 	handlerFunc, params := router.dynamicStore.Lookup(method, uri)
 	if handlerFunc != nil {
-		return handlerFunc, params
+		return handlerFunc, true, params
 	}
-	return notFound, nil
+	return notFound, false, nil
+}
+
+func ok(request *WebRequest) *model.Container {
+	return model.ResponseWithStatusCode(make(map[string]interface{}, 0), 200)
 }
 
 func notFound(request *WebRequest) *model.Container {
