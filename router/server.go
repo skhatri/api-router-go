@@ -26,10 +26,7 @@ type RequestSummary struct {
 func (hs *httpRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	requestUri := r.URL.Path
-	handlerFunc, found, pathParams := hs.router.delegate.getHandler(r.Method, requestUri)
-	if found && r.Method == "OPTIONS" {
-		handlerFunc = ok
-	}
+	handlerFunc, pathParams := hs.router.delegate.getHandler(r.Method, requestUri)
 	if handlerFunc == nil {
 		notFound(&WebRequest{Uri: r.RequestURI})
 		return

@@ -102,28 +102,28 @@ func (router *httpRouterDelegate) Post(uri string, handlerFn HandlerFunc) ApiCon
 func (router *httpRouterDelegate) Method(method string, uri string, handlerFunc HandlerFunc) ApiConfigurer {
 	if strings.Contains(uri, ":") {
 		router.dynamicStore.Add(method, uri, handlerFunc)
-		router.dynamicStore.Add("OPTIONS", uri, handlerFunc)
+		router.dynamicStore.Add("OPTIONS", uri, noContent)
 	} else {
 		router.staticStore.Add(method, uri, handlerFunc)
-		router.staticStore.Add("OPTIONS", uri, handlerFunc)
+		router.staticStore.Add("OPTIONS", uri, noContent)
 	}
 	return router
 }
 
-func (router *httpRouterDelegate) getHandler(method string, uri string) (HandlerFunc, bool, map[string]string) {
+func (router *httpRouterDelegate) getHandler(method string, uri string) (HandlerFunc, map[string]string) {
 	handlerFunc, _ := router.staticStore.Lookup(method, uri)
 	if handlerFunc != nil {
-		return handlerFunc, true, nil
+		return handlerFunc, nil
 	}
 	handlerFunc, params := router.dynamicStore.Lookup(method, uri)
 	if handlerFunc != nil {
-		return handlerFunc, true, params
+		return handlerFunc, params
 	}
-	return notFound, false, nil
+	return notFound, nil
 }
 
-func ok(request *WebRequest) *model.Container {
-	return model.ResponseWithStatusCode(make(map[string]interface{}, 0), 200)
+func noContent(request *WebRequest) *model.Container {
+	return model.ResponseWithStatusCode(nil, 204)
 }
 
 func notFound(request *WebRequest) *model.Container {
