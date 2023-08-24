@@ -2,9 +2,10 @@ package router
 
 import (
 	"fmt"
-	"github.com/skhatri/api-router-go/router/settings"
 	"log"
 	"net/http"
+
+	"github.com/skhatri/api-router-go/router/settings"
 )
 
 type HttpRouterConfiguration struct {
@@ -20,7 +21,6 @@ type HttpRouterOptions struct {
 type HttpRouteBuilder interface {
 	WithOptions(options HttpRouterOptions) HttpRouteBuilder
 	Configure(configurerFn func(httpDelegate ApiConfigurer)) HttpRouteBuilder
-	SettingsFrom(settingsFile *string) HttpRouteBuilder
 	Build() *http.ServeMux
 }
 
@@ -28,7 +28,6 @@ type _HttpRouterBuilder struct {
 	options         *HttpRouterOptions
 	configuration   *HttpRouterConfiguration
 	configurationFn func(configurer ApiConfigurer)
-	settings        *string
 }
 
 func (hrb *_HttpRouterBuilder) WithOptions(options HttpRouterOptions) HttpRouteBuilder {
@@ -45,11 +44,6 @@ func (hrb *_HttpRouterBuilder) Configure(configurerFn func(httpDelegate ApiConfi
 	return hrb
 }
 
-func (hrb *_HttpRouterBuilder) SettingsFrom(settingsFile *string) HttpRouteBuilder {
-	hrb.settings = settingsFile
-	return hrb
-}
-
 func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
 
 	if hrb.options == nil {
@@ -59,8 +53,6 @@ func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
 		}
 		hrb.options = &defaultOptions
 	}
-
-	hrb.processExternalConfiguration()
 
 	var apiConfigurer ApiConfigurer = hrb.configuration.delegate
 
@@ -75,8 +67,6 @@ func (hrb *_HttpRouterBuilder) Build() *http.ServeMux {
 	return serveMux
 }
 
-
-
 func addStaticMapping(serveMux *http.ServeMux, mapping map[string]string) {
 	for pathUri, folder := range mapping {
 		fs := http.FileServer(http.Dir(fmt.Sprintf("./%s", folder)))
@@ -85,17 +75,10 @@ func addStaticMapping(serveMux *http.ServeMux, mapping map[string]string) {
 	}
 }
 
-func (hrb *_HttpRouterBuilder) processExternalConfiguration() {
-	err := settings.ApplySettings(hrb.settings)
-	if err != nil {
-		panic(fmt.Sprintf("error processing route settings %s", err.Error()))
-	}
-}
-
 func (hrb *_HttpRouterBuilder) newRouter() *httpRouter {
 	return &httpRouter{
 		options: hrb.options,
-		router: hrb.configuration ,
+		router:  hrb.configuration,
 	}
 }
 
@@ -107,9 +90,9 @@ func NewHttpRouterBuilder() HttpRouteBuilder {
 
 func defaultRouterConfiguration() *HttpRouterConfiguration {
 	routerRef := &httpRouterDelegate{
-		dynamicStore: pathMatchingUriStore(),
-		staticStore: simpleUriStore(),
-		staticMapping:  make(map[string]string),
+		dynamicStore:  pathMatchingUriStore(),
+		staticStore:   simpleUriStore(),
+		staticMapping: make(map[string]string),
 	}
 	return &HttpRouterConfiguration{delegate: routerRef}
 }

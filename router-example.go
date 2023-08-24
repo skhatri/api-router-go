@@ -4,35 +4,29 @@ import (
 	"github.com/skhatri/api-router-go/router"
 	"github.com/skhatri/api-router-go/router/functions"
 	"github.com/skhatri/api-router-go/router/settings"
-	"log"
-	"net/http"
+	"github.com/skhatri/api-router-go/starter"
 )
 
 func main() {
+	_settings := settings.GetSettings()
+	addMore := _settings.IsToggleOn("add-more")
 
-	mux := router.NewHttpRouterBuilder().
-		WithOptions(router.HttpRouterOptions{
-			LogRequest: true,
-		}).
-		Configure(func(configurer router.ApiConfigurer) {
-			_settings := settings.GetSettings()
-			configurer.
+	configFn := func(configurer router.ApiConfigurer) {
+		configurer.
+			Get("/echo", functions.EchoFunc).
+			Post("/echo", functions.EchoFunc).
+			GetIf(true).Register("/status", functions.StatusFunc).
+			GetIf(false).Register("/status2", functions.StatusFunc).
 
-				Get("/echo", functions.EchoFunc).
-                                Post("/echo", functions.EchoFunc).
-				GetIf(true).Register("/status", functions.StatusFunc).
-				GetIf(false).Register("/status2", functions.StatusFunc).
+			//Style 2
+			GetIf(addMore).
+			Add("/status3", functions.StatusFunc).
+			Add("/status4", functions.StatusFunc).
+			Done().
+			Get("/greetings/:id-name", functions.EchoFunc).
+			Static("test", "test")
 
-				//Style 2
-				GetIf(_settings.IsToggleOn("add-more")).
-					Add("/status3", functions.StatusFunc).
-					Add("/status4", functions.StatusFunc).
-				Done().
-				Get("/greetings/:id-name", functions.EchoFunc).
-				Static("test", "test")
+	}
+	starter.RunApp(configFn)
 
-		}).Build()
-	var address = "0.0.0.0:6100"
-	log.Printf("Listening on %s\n", address)
-	http.ListenAndServe(address, mux)
 }

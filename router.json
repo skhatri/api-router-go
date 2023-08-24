@@ -12,7 +12,7 @@
     "source": ""
   },
   "options": {
-
+    "log-request": true
   },
   "variables": {
     "service_a_url": "http://localhost:7999"
@@ -21,7 +21,16 @@
     "read-mode": true,
     "write-mode": false
   },
+  "transport": {
+    "port": 6100,
+    "tls": {
+      "enabled": false,
+      "private-key": "private.key",
+      "public-key": "cert.pem"
+    }
+  },
   "app": {
 
   }
 }
+

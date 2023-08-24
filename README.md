@@ -16,41 +16,36 @@ go run router-example.go
 #### Quickstart
 
 ```go
-    import (
-"fmt"
-"github.com/skhatri/api-router-go/router"
-"github.com/skhatri/api-router-go/router/functions"
-"github.com/skhatri/api-router-go/starter"
-"net/http"
+package main
+
+import (
+  "github.com/skhatri/api-router-go/router"
+  "github.com/skhatri/api-router-go/router/functions"
+  "github.com/skhatri/api-router-go/starter"
+  "os"
 )
 
 func main() {
-starter.StartApp(os.Args, 6200, func (cfg router.ApiConfigurer) {
-configurer.Get("/echo", functions.EchoFunc)
-})
-}   
+  starter.StartApp(os.Args, 6200, func (cfg router.ApiConfigurer) {
+    cfg.Get("/echo", functions.EchoFunc)
+  })
+}
+
 ```
 
 #### Start your own server
 
 ```go
-    import (
-"log"
-"github.com/skhatri/api-router-go/router"
-"github.com/skhatri/api-router-go/router/functions"
-"net/http"
+import (
+  "github.com/skhatri/api-router-go/router"
+  "github.com/skhatri/api-router-go/starter"
+  "github.com/skhatri/api-router-go/router/functions"
 )
 
 func main() {
-httpRouter := router.NewHttpRouterBuilder().
-WithOptions(router.HttpRouterOptions{
-LogRequest: false,
-}).Configure(func (configurer router.ApiConfigurer) {
-configurer.Get("/echo", functions.EchoFunc)
-}).Build()
-var address = "0.0.0.0:6100"
-log.Printf("Listening on %s\n", address)
-http.ListenAndServe(address, httpRouter)
+  starter.RunApp(func(configurer router.ApiConfigurer) {
+		configurer.Get("/echo", functions.EchoFunc)
+	})
 }
 ```
 
@@ -160,3 +155,25 @@ The above snippet will render
 ```
 {"status": "OK"}
 ```
+
+#### Running TLS
+
+```
+openssl genrsa -out private.key 2048
+openssl req -new -x509 -sha256 -key private.key -out cert.pem -days 730
+```
+
+Add generated key and cert into router.json
+
+```
+"transport": {
+    "port": 6100,
+    "tls": {
+      "enabled": true,
+      "private-key": "private.key",
+      "public-key": "cert.pem"
+    }
+  }
+```
+
+

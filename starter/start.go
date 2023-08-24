@@ -3,11 +3,13 @@ package starter
 import (
 	"flag"
 	"fmt"
-	"github.com/skhatri/api-router-go/router"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/skhatri/api-router-go/router"
+	"github.com/skhatri/api-router-go/router/settings"
 )
 
 func parseArguments(args []string, defaultPort int) string {
@@ -31,7 +33,7 @@ func parseArguments(args []string, defaultPort int) string {
 }
 
 //StartApp quick starter
-func StartApp(appArgs []string, defaultPort int, configurationHook func(configurer router.ApiConfigurer)){
+func StartApp(appArgs []string, defaultPort int, configurationHook func(configurer router.ApiConfigurer)) {
 	StartAppWithOptions(appArgs, defaultPort, configurationHook, nil)
 }
 
@@ -59,7 +61,7 @@ func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook fu
 		} else {
 			logFunc = logFn
 		}
-		r := router.NewHttpRouterBuilder().
+		mux := router.NewHttpRouterBuilder().
 			WithOptions(router.HttpRouterOptions{
 				LogRequest:  true,
 				LogFunction: logFunc,
@@ -67,9 +69,31 @@ func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook fu
 			configurationHook(configurer)
 		}).Build()
 		log.Printf("Listening on %s\n", address)
-		http.ListenAndServe(address, r)
+		http.ListenAndServe(address, mux)
 	default:
 		log.Printf("command %s is not supported\n", command)
 	}
 
+}
+
+//RunApp - loads config from ROUTE_SETTINGS file or router.json
+func RunApp(configFn func(router.ApiConfigurer)) {
+	_settings := settings.GetSettings()
+	mux := router.NewHttpRouterBuilder().
+		WithOptions(router.HttpRouterOptions{
+			LogRequest: _settings.GetBoolOption("log-request", true),
+		}).
+		Configure(configFn).Build()
+
+	port := _settings.Transport().Port
+	var address = fmt.Sprintf("0.0.0.0:%d", port)
+
+	tls := _settings.Transport().Tls
+	if tls != nil && tls.Enabled != nil && *tls.Enabled {
+		log.Printf("Listening with TLS on %s\n", address)
+		http.ListenAndServeTLS(address, tls.PublicKey, tls.PrivateKey, mux)
+	} else {
+		log.Printf("Listening on %s\n", address)
+		http.ListenAndServe(address, mux)
+	}
 }
