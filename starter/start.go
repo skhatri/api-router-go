@@ -78,11 +78,21 @@ func StartAppWithOptions(appArgs []string, defaultPort int, configurationHook fu
 
 //RunApp - loads config from ROUTE_SETTINGS file or router.json
 func RunApp(configFn func(router.ApiConfigurer)) {
+	RunAppWithOptions(configFn, nil)
+}
+
+//RunAppWithOptions - loads config from ROUTE_SETTINGS and injects custom log handler
+func RunAppWithOptions(configFn func(router.ApiConfigurer), logFn func(summary router.RequestSummary)) {
 	_settings := settings.GetSettings()
+	routerOptions := router.HttpRouterOptions{
+		LogRequest: _settings.GetBoolOption("log-request", true),
+	}
+	if logFn != nil {
+		routerOptions.LogFunction = logFn
+	}
+
 	mux := router.NewHttpRouterBuilder().
-		WithOptions(router.HttpRouterOptions{
-			LogRequest: _settings.GetBoolOption("log-request", true),
-		}).
+		WithOptions(routerOptions).
 		Configure(configFn).Build()
 
 	port := _settings.Transport().Port
